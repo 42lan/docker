@@ -1,0 +1,239 @@
+01.
+docker-machine ls
+docker-machine create --driver virtualbox Char
+docker-machine ls
+
+02.
+docker-machine ip Char
+
+03.
+env
+eval $(docker-machine env Char)
+env
+
+04.
+docker images
+docker image pull hello-world
+docker images
+
+05.
+docker container ls
+docker container run hello-world
+docker container ls -a
+
+06.
+docker container run --detach --name=overlord --publish 5000:80 --restart always nginx
+# Name of cantainer, port bind
+docker container ls
+# Nginx test page
+#	In Shell tape commande: curl http://192.168.99.100:5000
+#	In Chrome go to: http://192.168.99.100:5000
+# RestartPolicy has two properties {NAME(no, on-failure, always and unless-stopped), MAXIMUMRETRYCOUNT}
+
+07.
+docker container inspect --format '{{ .NetworkSettings.IPAddress }}' overlord
+
+08.
+docker container run --rm --interactive --tty alpine /bin/sh
+# Check os version
+cat /etc/os-release
+# Print information about the current system
+uname -a
+# List all containers (running/exited) after exit alpine
+docker ps -a
+
+09.
+docker container run --rm --interactive --tty debian
+# Execute following commands
+#	debian@hostmame:/# apt-get update && apt-get -y upgrade
+#	debian@hostname:/# apt-get -y install gcc git
+# Clone repo and verify if it is downloaded
+#	git clone https://github.com/docker/docker.git
+# Istall vim and write a simple hello_world program, compile it and run
+# Check that container is auto-removed with docker ps -a
+
+10.
+docker volume ls
+docker volume create --name=hatchery
+docker volume ls
+
+11.
+docker volume list --quiet
+
+12 - 13 :
+docker container run --detach --restart on-failure --env MYSQL_ROOT_PASSWORD=Kerrigan --volume hatchery:/var/lib/mysql --env MYSQL_DATABASE=zerglings --name=spawning-pool mysql --default-authentication-plugin=mysql_native_password
+docker container ls
+
+docker container exec spawning-pool env
+# List mounted volumes
+#	docker inspect -f '{{ .Mounts }}' spawning-pool
+# Print restart policy
+#	docker inspect -f "{{ .HostConfig.RestartPolicy }}" spawning-pool
+# Following command should ask password and then enter in mysql
+#	e1r1p3> docker exec -it spawning-pool mysql -uroot -p
+# Following commang should print `zerglings` database
+#	mysql> show databases;
+
+14.
+docker container run --detach --name=lair --publish 8080:80 --link spawning-pool:mysql --env WORDPRESS_DB_PASSWORD=Kerrigan --env WORDPRESS_DB_NAME=zerglings wordpress
+docker container ls
+# In Chrome go to http://192.168.99.100:8080/
+
+15.
+docker container run --detach --name=roach-warden --publish 8081:80 --link spawning-pool:db phpmyadmin/phpmyadmin
+docker container ls
+# In Chrome go to http://192.168.99.100:8081/
+
+16.
+docker container logs --follow spawning-pool
+
+17.
+docker container list
+
+18.
+docker container restart overlord
+docker container ls
+# Enter following commands to kill container
+#	docker exec -it overlord /bin/sh -c "kill 1"
+
+
+19.
+docker run --name Abathur --interactive --tty --volume ${HOME}:/root --publish 3000:3000 python:2-slim bash
+root@****:/# pip install flask && python /root/flask_web/app.py
+# In Chrome go to http://192.168.99.100:3000/
+
+20.
+docker swarm init --advertise-addr=$(docker-machine ip Char)
+# Check that Char Manager Status is Leader
+#	docker node ls
+
+21.
+docker-machine create --driver virtualbox Aiur
+docker-machine ls
+
+
+# TO CHANGE ACTIVE MACHINE TO Char FOR EXAMPLE OR LIST MACHINES WITH docker-machine AND CHOOSE ONE
+#	eval $(docker-machine env Char)
+
+
+22.
+docker-machine ssh Aiur "docker swarm join --token $(docker swarm join-token worker -q) $(docker inspect Char --format '{{ .ManagerStatus.Addr }}')"
+docker node ls
+
+23.
+docker network create --driver overlay overmind
+docker network ls
+
+24.
+docker service ls
+docker service create --name orbital-command --env RABBITMQ_DEFAULT_USER=root --env RABBITMQ_DEFAULT_PASS=Kerrigan --network overmind rabbitmq:latest
+docker service ls
+# Check that following command show status Running
+#	docker service ps orbital-command
+# Check if there is 2 env var RABBITMQ_DEFAULT_USER, RABBITMQ_DEFAULT_PASS
+#	docker service inspect -f "{{ .Spec.TaskTemplate.ContainerSpec }}" orbital-command
+
+25.
+docker service list
+
+
+26.
+docker service create --replicas 2 --env OC_USERNAME=root --env OC_PASSWD=Kerrigan --network overmind --name engineering-bay 42school/engineering-bay:latest
+docker service ls
+# Check that ther is 2 replics with STATE Running. Node Char and Aiur
+#	docker service ps engineering-bay
+# Following command must have 2 env. vars. OC_USERNAME and OC_PASSWD
+#	docker service inspect -f "{{ .Spec.TaskTemplate.ContainerSpec }}" engineering-bay
+
+27.
+docker service logs --follow $(docker service ps engineering-bay --quiet | tail -n 1)
+
+28.
+docker service create --replicas 2 --env OC_USERNAME=root --env OC_PASSWD=Kerrigan --name marines --network overmind 42school/marine-squad:latest
+docker service ls
+# Following command mush show 2 replic with Running status
+#	docker service ps marines
+# Following command must have 2 env. vars. OC_USERNAME and OC_PASSWD
+#	docker service inspect -f "{{ .Spec.TaskTemplate.ContainerSpec }}" marines
+# Check logs
+#	docker service logs --follow marines
+
+29.
+docker service ps marines
+docker service ls
+
+30.
+docker service ls
+docker service scale marines=20
+docker service ls
+# Following command shows 20 replics with Running status
+#	docker service ps marines
+
+31.
+docker service ls
+docker service rm $(docker service ls --quiet)
+# Check that there is no services
+#	 docker service ls
+
+32.
+docker container ls -a
+docker container rm --force $(docker container ls --all --quiet)
+# Check that is there no containers
+#	docker container ls -a
+
+33.
+docker image rm --force $(docker image ls --all --quiet)
+# Check that is there no images
+#	docker images ls
+
+34.
+docker-machine rm --force -y Aiur
+# Check there is no images
+#	docker-machine ls
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+ex00.
+docker build -t alpine_vim .
+docker images
+docker container run --rm -it alpine_vim
+docker container ls -a
+
+ex01.
+# Run run.sh script to build and lauch builded images
+# Then on host run TS3 Client and connect to 192.168.99.100
+
+ex02.
+docker image build -t ft-rails:on-build .
+docker images
+
+# TO PUSH IMAGE TO DOCKERHUB
+# Tag created image
+#	docker tag ft-rails:on-build amalsago/ft-rails
+# Push it to dockerhub
+#	docker push amalsago/ft-rails
+
+# Go to ~/42/2019/DOCKER_CORRECTION_TEST and build subject images:
+docker image build --tag ror_app .
+# Then run ror_app container
+docker container run -it -p 3000:3000 ror_app
+# And visit http://192.168.99.100:3000/
+
+ex03.
+# Create a machine with 2Gb RAM and 2 CPU
+docker-machine create --driver virtualbox --virtualbox-memory "2048" --virtualbox-cpu-count "2"  Gitlab
+# Take IP to acced in Gitlab
+docker-machine ip Gitlab
+# Build image
+docker build --tag=my_gitlab .
+# Run container
+docker run -it --rm -p 80:80 -p 443:443 -p 23:22 my_gitlab
+# Go to the IP of Gitlab (docker-machine ip Gitlab) and visite https://192.168.99.100/
+# Create a repo
+# In terminal clone created repo
+GIT_SSL_NO_VERIFY=true git clone https://...
+# Add some stuff and push repo
+GIT_SSL_NO_VERIFY=true git push
+# Check changement in graphical mode in Gitlab site
